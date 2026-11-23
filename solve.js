@@ -21,6 +21,10 @@ const CC_LT = 60;
 const CC_GT = 62;
 const CC_QUOTE = 34;
 const CC_APOS = 39;
+const CC_BACKSLASH = 92;
+const CC_BACKTICK = 96;
+const CC_STAR = 42;
+const CC_LBRACKET = 91;
 
 export function escapeHtml(text) {
   let out = '';
