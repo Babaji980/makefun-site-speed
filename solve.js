@@ -1,5 +1,11 @@
-// solve.js: a fast drop-in for makefun-site 1.0.0's build(). Same answer for every input, less CPU.
-// The rules are the reference's (vendor/makefun-site/README.md and its code); every fast path below is exact.
+// solve.js: a fast, byte-exact drop-in for makefun-site 1.0.0's build().
+// Same answer for every input as the house baseline, less CPU time.
+// Optimizations (all exact, verified byte-identical to makefun-site 1.0.0):
+//   - escapeHtml: charCode loop with early return when no escapable chars
+//   - slugify: ASCII fast path, NFKD only for non-ASCII input
+//   - inline: /[\\`*[]/ global regex to jump to next construct start
+//   - template parsing: single-pass token tree, scope-chain lookup
+//   - build: pre-allocated arrays, Map/Set lookups, no clock/env/random/fs
 
 // ---------------------------------------------------------------- text
 
@@ -10,12 +16,18 @@ ESC[62] = '&gt;';
 ESC[34] = '&quot;';
 ESC[39] = '&#39;';
 
+const CC_AMP = 38;
+const CC_LT = 60;
+const CC_GT = 62;
+const CC_QUOTE = 34;
+const CC_APOS = 39;
+
 export function escapeHtml(text) {
   let out = '';
   let last = 0;
   for (let i = 0; i < text.length; i++) {
     const c = text.charCodeAt(i);
-    if (c === 38 || c === 60 || c === 62 || c === 34 || c === 39) {
+    if (c === CC_AMP || c === CC_LT || c === CC_GT || c === CC_QUOTE || c === CC_APOS) {
       if (i !== last) out += text.slice(last, i);
       out += ESC[c];
       last = i + 1;
